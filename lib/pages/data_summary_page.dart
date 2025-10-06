@@ -77,11 +77,6 @@ class _DataSummaryPageState extends State<DataSummaryPage> {
 
   @override
   Widget build(BuildContext context) {
-    // Refresh data each time the widget is built (when user navigates to this page)
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadCurrentData();
-    });
-
     return Container(
       decoration: BoxDecoration(
         gradient: LinearGradient(
@@ -99,7 +94,7 @@ class _DataSummaryPageState extends State<DataSummaryPage> {
               const SizedBox(height: 20),
               const Center(
                 child: Text(
-                  'Data Summary',
+                  'History',
                   style: TextStyle(
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
@@ -137,7 +132,7 @@ class _DataSummaryPageState extends State<DataSummaryPage> {
                       style: const TextStyle(color: Colors.white, fontSize: 16),
                     ),
                     Text(
-                      'Notes: ${_currentNotes.isNotEmpty ? "Added" : "None"}',
+                      'Notes: ${_currentNotes.isNotEmpty ? _currentNotes : "None"}',
                       style: const TextStyle(color: Colors.white, fontSize: 16),
                     ),
                   ],

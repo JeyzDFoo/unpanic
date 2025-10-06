@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'pages/trigger_tracking_page.dart';
+import 'pages/slider_page.dart';
 import 'pages/breathing_exercise_page.dart';
-import 'pages/favorites_page.dart'; // NotesPage is in this file
+import 'pages/notes_page.dart'; // NotesPage is in this file
 import 'pages/data_summary_page.dart';
 import 'services/session_data_provider.dart';
 
@@ -82,7 +82,7 @@ class _PageViewDemoState extends State<PageViewDemo> {
                 _autoSaveSession();
               },
               children: [
-                const TriggerTrackingPage(),
+                const SliderPage(),
                 const BreathingExercisePage(),
                 const NotesPage(),
                 DataSummaryPage(

@@ -98,7 +98,7 @@ class _NotesPageState extends State<NotesPage> {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Colors.orange.shade300, Colors.amber.shade300],
+            colors: [Colors.green.shade300, Colors.teal.shade300],
           ),
         ),
         child: SafeArea(

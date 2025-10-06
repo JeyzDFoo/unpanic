@@ -25,7 +25,7 @@ class _BreathingExercisePageState extends State<BreathingExercisePage>
       _loadSavedCycles();
     });
     _animationController = AnimationController(
-      duration: const Duration(seconds: 8), // 4 seconds in, 4 seconds out
+      duration: const Duration(seconds: 6), // 4 seconds in, 4 seconds out
       vsync: this,
     );
 

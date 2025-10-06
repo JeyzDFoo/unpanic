@@ -1,16 +1,16 @@
 import 'package:flutter/material.dart';
-import '../services/storage_service.dart';
+import 'package:provider/provider.dart';
+import '../services/session_data_provider.dart';
 
-class HomePage extends StatefulWidget {
-  const HomePage({super.key});
+class SliderPage extends StatefulWidget {
+  const SliderPage({super.key});
 
   @override
-  State<HomePage> createState() => _HomePageState();
+  State<SliderPage> createState() => _SliderPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _SliderPageState extends State<SliderPage> {
   double _triggerValue = 1.0; // Default to baseline (calm)
-  final StorageService _storage = StorageService();
 
   String _getTriggerText() {
     if (_triggerValue <= 2) return "Baseline";
@@ -31,24 +31,38 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-    _loadSavedTrigger();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadSavedTrigger();
+    });
   }
 
   void _loadSavedTrigger() async {
-    final savedTrigger = await _storage.getCurrentTrigger();
+    final provider = Provider.of<SessionDataProvider>(context, listen: false);
     setState(() {
-      _triggerValue = savedTrigger;
+      _triggerValue = provider.triggerLevel;
     });
   }
 
   void _saveTrigger(double value) async {
-    await _storage.saveCurrentTrigger(value);
+    try {
+      final provider = Provider.of<SessionDataProvider>(context, listen: false);
+      await provider.updateTriggerLevel(value);
+      print('Trigger saved: $value'); // Debug output
+    } catch (e) {
+      print('Error saving trigger: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: Colors.red.shade300,
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Colors.teal.shade300, Colors.blue.shade300],
+        ),
+      ),
       child: Center(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40),
