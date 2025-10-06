@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/storage_service.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -9,6 +10,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   double _triggerValue = 1.0; // Default to baseline (calm)
+  final StorageService _storage = StorageService();
 
   String _getTriggerText() {
     if (_triggerValue <= 2) return "Baseline";
@@ -24,6 +26,23 @@ class _HomePageState extends State<HomePage> {
     if (_triggerValue <= 6) return Colors.yellow;
     if (_triggerValue <= 8) return Colors.orange;
     return Colors.red;
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _loadSavedTrigger();
+  }
+
+  void _loadSavedTrigger() async {
+    final savedTrigger = await _storage.getCurrentTrigger();
+    setState(() {
+      _triggerValue = savedTrigger;
+    });
+  }
+
+  void _saveTrigger(double value) async {
+    await _storage.saveCurrentTrigger(value);
   }
 
   @override
@@ -78,6 +97,7 @@ class _HomePageState extends State<HomePage> {
                         setState(() {
                           _triggerValue = value;
                         });
+                        _saveTrigger(value);
                       },
                     ),
                   ),

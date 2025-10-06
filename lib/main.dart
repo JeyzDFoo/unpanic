@@ -57,9 +57,9 @@ class _PageViewDemoState extends State<PageViewDemo> {
               },
               children: const [
                 HomePage(),
-                SettingsPage(),
-                FavoritesPage(),
-                ProfilePage(),
+                ExercisePage(),
+                NotesPage(),
+                DataPage(),
               ],
             ),
           ),
