@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'dart:io';
+import 'package:path_provider/path_provider.dart';
 import '../services/session_data_provider.dart';
 
 class SettingsPage extends StatelessWidget {
@@ -59,10 +62,26 @@ class SettingsPage extends StatelessWidget {
                         ),
                         const SizedBox(height: 12),
                         const Text(
-                          'Clear all saved panic entries and reset current session data.',
+                          'Export your data as CSV or clear all saved entries.',
                           style: TextStyle(fontSize: 14, color: Colors.black54),
                         ),
                         const SizedBox(height: 16),
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton.icon(
+                            onPressed: () => _exportDataAsCSV(context),
+                            icon: const Icon(Icons.file_download),
+                            label: const Text('Export Data as CSV'),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.blue.shade600,
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 12),
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
@@ -166,5 +185,72 @@ class SettingsPage extends StatelessWidget {
         );
       },
     );
+  }
+
+  void _exportDataAsCSV(BuildContext context) async {
+    try {
+      final provider = Provider.of<SessionDataProvider>(context, listen: false);
+
+      // Load all entries including current session if needed
+      await provider.loadSavedEntries();
+      final entries = provider.allEntries; // Use allEntries to get everything
+
+      if (entries.isEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('No data to export'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
+
+      // Generate CSV content
+      String csvContent =
+          'Session ID,Date,Time,Trigger Level,Breathing Cycles,Notes\n';
+
+      for (final entry in entries) {
+        final date = entry.timestamp.toLocal();
+        final dateStr =
+            '${date.year}-${date.month.toString().padLeft(2, '0')}-${date.day.toString().padLeft(2, '0')}';
+        final timeStr =
+            '${date.hour.toString().padLeft(2, '0')}:${date.minute.toString().padLeft(2, '0')}';
+        final notes = entry.notes
+            .replaceAll(',', ';')
+            .replaceAll('\n', ' '); // Clean notes for CSV
+
+        csvContent +=
+            '${entry.sessionId},$dateStr,$timeStr,${entry.triggerLevel},${entry.breathingCycles},"$notes"\n';
+      }
+
+      // Get temporary directory to save the file
+      final directory = await getTemporaryDirectory();
+      final file = File('${directory.path}/unpanic_data.csv');
+      await file.writeAsString(csvContent);
+
+      // Share the CSV file
+      await Share.shareXFiles([
+        XFile(file.path),
+      ], subject: 'Unpanic Data Export - ${entries.length} entries');
+
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Exported ${entries.length} entries successfully!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+      }
+    } catch (e) {
+      print('Error exporting CSV: $e');
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error exporting data: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 }
