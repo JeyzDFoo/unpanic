@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import '../services/storage_service.dart';
+import 'package:provider/provider.dart';
+import '../services/session_data_provider.dart';
 
 class NotesPage extends StatefulWidget {
   const NotesPage({super.key});
@@ -12,34 +13,68 @@ class _NotesPageState extends State<NotesPage> {
   final TextEditingController _notesController = TextEditingController();
   final FocusNode _focusNode = FocusNode();
   bool _hasText = false;
-  final StorageService _storage = StorageService();
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
-    _loadSavedNotes();
-    _notesController.addListener(() {
-      setState(() {
-        _hasText = _notesController.text.isNotEmpty;
-      });
-      _saveNotes();
-    });
+    _initializeNotes();
   }
 
-  void _loadSavedNotes() async {
-    final savedNotes = await _storage.getCurrentNotes();
-    _notesController.text = savedNotes;
+  void _initializeNotes() async {
+    try {
+      // Load saved notes first
+      final provider = Provider.of<SessionDataProvider>(context, listen: false);
+      final savedNotes = provider.notes;
+
+      // Set the text without triggering listeners
+      _notesController.text = savedNotes;
+
+      setState(() {
+        _hasText = savedNotes.isNotEmpty;
+        _isInitialized = true;
+      });
+
+      // Add listener after initialization is complete
+      _notesController.addListener(_onNotesChanged);
+
+      print('Notes initialized with: "$savedNotes"'); // Debug print
+    } catch (e) {
+      print('Error initializing notes: $e');
+      setState(() {
+        _isInitialized = true;
+      });
+      // Add listener even if loading failed
+      _notesController.addListener(_onNotesChanged);
+    }
+  }
+
+  void _onNotesChanged() {
+    if (!_isInitialized) return; // Don't save during initialization
+
     setState(() {
-      _hasText = savedNotes.isNotEmpty;
+      _hasText = _notesController.text.isNotEmpty;
     });
+    _saveNotes();
   }
 
   void _saveNotes() async {
-    await _storage.saveCurrentNotes(_notesController.text);
+    if (!_isInitialized) return; // Don't save during initialization
+
+    try {
+      final provider = Provider.of<SessionDataProvider>(context, listen: false);
+      await provider.updateNotes(_notesController.text);
+      print('Notes saved: "${_notesController.text}"'); // Debug print
+    } catch (e) {
+      print('Error saving notes: $e');
+    }
   }
 
   @override
   void dispose() {
+    if (_isInitialized) {
+      _notesController.removeListener(_onNotesChanged);
+    }
     _notesController.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -48,7 +83,7 @@ class _NotesPageState extends State<NotesPage> {
   void _clearNotes() {
     _notesController.clear();
     _focusNode.unfocus();
-    _saveNotes(); // This will save the empty string
+    // The listener will automatically save the empty string
   }
 
   @override

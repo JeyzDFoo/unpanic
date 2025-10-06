@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
-import 'pages/home_page.dart';
-import 'pages/settings_page.dart';
-import 'pages/favorites_page.dart';
-import 'pages/profile_page.dart';
+import 'package:provider/provider.dart';
+import 'pages/trigger_tracking_page.dart';
+import 'pages/breathing_exercise_page.dart';
+import 'pages/favorites_page.dart'; // NotesPage is in this file
+import 'pages/data_summary_page.dart';
+import 'services/session_data_provider.dart';
 
 void main() {
   runApp(const MainApp());
@@ -14,9 +16,12 @@ class MainApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'PageView Demo',
+      title: 'Unpanic',
       theme: ThemeData(primarySwatch: Colors.blue),
-      home: const PageViewDemo(),
+      home: ChangeNotifierProvider(
+        create: (context) => SessionDataProvider(),
+        child: const PageViewDemo(),
+      ),
     );
   }
 }
@@ -33,16 +38,36 @@ class _PageViewDemoState extends State<PageViewDemo> {
   int _currentPage = 0;
 
   @override
+  void initState() {
+    super.initState();
+    // Initialize the provider when the page loads
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final provider = Provider.of<SessionDataProvider>(context, listen: false);
+      provider.initialize();
+    });
+  }
+
+  @override
   void dispose() {
     _pageController.dispose();
     super.dispose();
+  }
+
+  void _autoSaveSession() async {
+    try {
+      final provider = Provider.of<SessionDataProvider>(context, listen: false);
+      await provider.autoSaveSession();
+      print('Session auto-saved successfully'); // Debug output
+    } catch (e) {
+      print('Error auto-saving session: $e');
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('PageView with 4 Pages'),
+        title: const Text('Unpanic'),
         backgroundColor: Colors.blue,
       ),
       body: Column(
@@ -54,12 +79,21 @@ class _PageViewDemoState extends State<PageViewDemo> {
                 setState(() {
                   _currentPage = page;
                 });
+                _autoSaveSession();
               },
-              children: const [
-                HomePage(),
-                ExercisePage(),
-                NotesPage(),
-                DataPage(),
+              children: [
+                const TriggerTrackingPage(),
+                const BreathingExercisePage(),
+                const NotesPage(),
+                DataSummaryPage(
+                  onRestart: () {
+                    _pageController.animateToPage(
+                      0,
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+                ),
               ],
             ),
           ),
@@ -100,6 +134,7 @@ class _PageViewDemoState extends State<PageViewDemo> {
           ElevatedButton(
             onPressed: _currentPage > 0
                 ? () {
+                    _autoSaveSession();
                     _pageController.previousPage(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
@@ -111,13 +146,29 @@ class _PageViewDemoState extends State<PageViewDemo> {
           ElevatedButton(
             onPressed: _currentPage < 3
                 ? () {
+                    _autoSaveSession();
                     _pageController.nextPage(
                       duration: const Duration(milliseconds: 300),
                       curve: Curves.easeInOut,
                     );
                   }
-                : null,
-            child: const Text('Next'),
+                : () async {
+                    // Save current session before restart
+                    final provider = Provider.of<SessionDataProvider>(
+                      context,
+                      listen: false,
+                    );
+                    await provider.saveCurrentSession();
+                    // Reset for new session
+                    await provider.resetCurrentSession();
+                    // Restart - go back to first page
+                    _pageController.animateToPage(
+                      0,
+                      duration: const Duration(milliseconds: 500),
+                      curve: Curves.easeInOut,
+                    );
+                  },
+            child: Text(_currentPage < 3 ? 'Next' : 'Restart'),
           ),
         ],
       ),

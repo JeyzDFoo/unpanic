@@ -60,14 +60,28 @@ class StorageService {
 
   // Save current notes
   Future<void> saveCurrentNotes(String notes) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_currentNotesKey, notes);
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final success = await prefs.setString(_currentNotesKey, notes);
+      print(
+        'Storage service - saving notes: "$notes", success: $success',
+      ); // Debug
+    } catch (e) {
+      print('Storage service error saving notes: $e');
+    }
   }
 
   // Get current notes
   Future<String> getCurrentNotes() async {
-    final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_currentNotesKey) ?? '';
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final notes = prefs.getString(_currentNotesKey) ?? '';
+      print('Storage service - loading notes: "$notes"'); // Debug
+      return notes;
+    } catch (e) {
+      print('Storage service error loading notes: $e');
+      return '';
+    }
   }
 
   // Create and save a complete entry from current data
