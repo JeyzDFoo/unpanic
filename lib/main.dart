@@ -19,7 +19,7 @@ class MainApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => SessionDataProvider(),
       child: MaterialApp(
-        debugShowCheckedModeBanner: false,
+        debugShowCheckedModeBanner: true,
         title: 'Unpanic',
         theme: ThemeData(primarySwatch: Colors.blue),
         home: const PageViewDemo(),
