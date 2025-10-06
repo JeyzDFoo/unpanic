@@ -67,8 +67,8 @@ class _PageViewDemoState extends State<PageViewDemo> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Unpanic'),
-        backgroundColor: Colors.blue,
+        title: const Text('Unpanic', style: TextStyle(color: Colors.white)),
+        backgroundColor: Colors.black87,
       ),
       body: Column(
         children: [
