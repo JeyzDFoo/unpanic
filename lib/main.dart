@@ -4,6 +4,7 @@ import 'pages/slider_page.dart';
 import 'pages/breathing_exercise_page.dart';
 import 'pages/notes_page.dart'; // NotesPage is in this file
 import 'pages/data_summary_page.dart';
+import 'pages/settings_page.dart';
 import 'services/session_data_provider.dart';
 
 void main() {
@@ -15,12 +16,12 @@ class MainApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Unpanic',
-      theme: ThemeData(primarySwatch: Colors.blue),
-      home: ChangeNotifierProvider(
-        create: (context) => SessionDataProvider(),
-        child: const PageViewDemo(),
+    return ChangeNotifierProvider(
+      create: (context) => SessionDataProvider(),
+      child: MaterialApp(
+        title: 'Unpanic',
+        theme: ThemeData(primarySwatch: Colors.blue),
+        home: const PageViewDemo(),
       ),
     );
   }
@@ -66,9 +67,21 @@ class _PageViewDemoState extends State<PageViewDemo> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.black,
       appBar: AppBar(
         title: const Text('Unpanic', style: TextStyle(color: Colors.white)),
         backgroundColor: Colors.black87,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.settings, color: Colors.white),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SettingsPage()),
+              );
+            },
+          ),
+        ],
       ),
       body: Column(
         children: [

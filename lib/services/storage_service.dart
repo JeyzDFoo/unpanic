@@ -23,6 +23,28 @@ class StorageService {
     await prefs.setString(_entriesKey, jsonEncode(entriesJson));
   }
 
+  // Update existing entry by session ID, or create new one if not found
+  Future<void> saveOrUpdatePanicEntry(PanicEntry entry) async {
+    final prefs = await SharedPreferences.getInstance();
+    final entries = await getAllEntries();
+
+    // Find existing entry with same session ID
+    final existingIndex = entries.indexWhere(
+      (e) => e.sessionId == entry.sessionId,
+    );
+
+    if (existingIndex != -1) {
+      // Update existing entry
+      entries[existingIndex] = entry;
+    } else {
+      // Add new entry
+      entries.add(entry);
+    }
+
+    final entriesJson = entries.map((e) => e.toJson()).toList();
+    await prefs.setString(_entriesKey, jsonEncode(entriesJson));
+  }
+
   // Get all panic entries
   Future<List<PanicEntry>> getAllEntries() async {
     final prefs = await SharedPreferences.getInstance();
@@ -91,6 +113,7 @@ class StorageService {
     final notes = await getCurrentNotes();
 
     final entry = PanicEntry(
+      sessionId: DateTime.now().millisecondsSinceEpoch.toString(),
       timestamp: DateTime.now(),
       triggerLevel: triggerLevel,
       breathingCycles: breathingCycles,
